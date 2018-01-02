@@ -56,7 +56,10 @@ namespace TodoApi
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "Todo API v1");
             });
 
-            app.UseMvc();
+            app.UseMvc(routes =>
+            {
+                routes.MapRoute("default", "{controller=Home}/{action=Index}/{id?}");
+            });
         }
     }
 }
