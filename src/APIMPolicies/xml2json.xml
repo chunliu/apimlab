@@ -1,0 +1,19 @@
+<policies>
+  <inbound>
+    <base />
+    <xml-to-json kind="direct" apply="content-type-xml" consider-accept-header="false" />
+    <find-and-replace from="{&quot;Document&quot;:" to="" />
+    <find-and-replace from="}}" to="}" />
+    <rewrite-uri template="/api/Todo" />
+  </inbound>
+  <backend>
+    <base />
+  </backend>
+  <outbound>
+    <base />
+    <json-to-xml apply="content-type-json" consider-accept-header="true" />
+  </outbound>
+  <on-error>
+    <base />
+  </on-error>
+</policies>

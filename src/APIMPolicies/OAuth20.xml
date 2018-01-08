@@ -1,0 +1,41 @@
+<policies>
+  <inbound>
+    <base />
+    <cache-lookup-value key="accessTokenCache" variable-name="accessToken" />
+    <choose>
+      <when condition="@(!context.Variables.ContainsKey("accessToken"))">
+        <send-request ignore-error="true" timeout="20" response-variable-name="bearerToken" mode="new">
+          <set-url>{{authorizationServer}}</set-url>
+          <set-method>POST</set-method>
+          <set-header name="Content-Type" exists-action="override">
+            <value>application/x-www-form-urlencoded</value>
+          </set-header>
+          <set-body>
+            @{
+            return "client_id={{clientId}}&resource={{scope}}&client_secret={{clientSecret}}&grant_type=client_credentials";
+            }
+          </set-body>
+        </send-request>
+        <set-variable name="bearerTokenVar" value="@((String)((IResponse)context.Variables["bearerToken"]).Body.As<JObject>().ToString())" />
+          <set-variable name="accessToken" value="@(JObject.Parse((String)(context.Variables["bearerTokenVar"]))["access_token"].ToString())" />
+          <set-variable name="expiresIn" value="@(JObject.Parse((String)(context.Variables["bearerTokenVar"]))["expires_in"].ToString())" />
+          <cache-store-value key="accessTokenCache" value="@((String)context.Variables["accessToken"])" duration="@(Int32.Parse((String)context.Variables["expiresIn"]) - 10)" />
+        </when>
+    </choose>
+    <set-header name="Authorization" exists-action="override">
+      <value>
+        @("Bearer " + (String)context.Variables["accessToken"])
+      </value>
+    </set-header>
+    <set-header exists-action="delete" name="Ocp-Apim-Subscription-Key" />
+  </inbound>
+  <backend>
+    <base />
+  </backend>
+  <outbound>
+    <base />
+  </outbound>
+  <on-error>
+    <base />
+  </on-error>
+</policies>
